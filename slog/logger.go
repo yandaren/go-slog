@@ -59,7 +59,6 @@ func (this *Logger) ShouldLog(lvl LogLevel) bool {
 
 func (this *Logger) log_msg(lvl LogLevel, format string, args ...interface{}) {
 	if !this.ShouldLog(lvl) {
-		fmt.Printf("shoud not log")
 		return
 	}
 
