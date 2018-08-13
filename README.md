@@ -1,5 +1,5 @@
 ***
-a very simple log writer og go
+a very simple log writer of go
 
 ### examples
 
