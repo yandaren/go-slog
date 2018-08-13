@@ -83,6 +83,7 @@ func File_writer_test() {
 	}
 }
 
+// 这个就是最简单的单个文件的logger
 func Simple_file_logger_test() {
 	fmt.Printf("simple_file_logger_test\n")
 
@@ -95,6 +96,14 @@ func Simple_file_logger_test() {
 	}
 }
 
+// 这个指定每个文件的最大大小，以及维护的最大文件格式
+// 当前文件大小到达指定的最大文件大小之后，就会进行一次rotating
+// 比如最多保留3个文件的话
+// Rotate files:
+// log.txt -> log.1.txt
+// log.1.txt -> log.2.txt
+// log.2.txt -> log.3.txt
+// log.3.txt -> delete
 func Rotating_logger_test() {
 	fmt.Printf("rotating_logger_test\n")
 
@@ -105,6 +114,7 @@ func Rotating_logger_test() {
 	}
 }
 
+// 这个是每日一个文件的logger
 func Daily_logger_test() {
 	fmt.Printf("daily_logger_test\n")
 
@@ -115,6 +125,7 @@ func Daily_logger_test() {
 	}
 }
 
+// 这个是每个小时会重新生成一个文件的logger
 func Hourly_logger_test() {
 	fmt.Printf("Hourly_logger_test\n")
 
@@ -125,6 +136,8 @@ func Hourly_logger_test() {
 	}
 }
 
+// 你创建的一个logger，同一条日志可以根据需要打印到多个地方
+// 比如stdout, stderr, file 之类的
 func Muti_sink_test() {
 	logger := slog.NewLogger("muti_logger")
 	sink1 := slog.NewSimpleFileSinkSt("muti_sink_logger.txt")
@@ -204,5 +217,6 @@ func Muti_goroutine_log_file_test_lock() {
 	time.Sleep(time.Millisecond * 100)
 	fmt.Printf("sleep finished, Muti_goroutine_test_nolock end\n")
 }
+
 
 ```
