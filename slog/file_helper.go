@@ -39,14 +39,14 @@ func (this *FileWriter) Open(name string, truncate bool) bool {
 	this.Close()
 	this.file_name = name
 
-	open_flag := os.O_CREATE | os.O_RDWR
+	open_flag := os.O_CREATE | os.O_WRONLY
 	if truncate {
 		open_flag |= os.O_TRUNC
 	} else {
 		open_flag |= os.O_APPEND
 	}
 
-	file, err := os.OpenFile(name, open_flag, os.ModeExclusive)
+	file, err := os.OpenFile(name, open_flag, 0666)
 	if err != nil {
 		return false
 	}
