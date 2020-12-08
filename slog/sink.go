@@ -4,10 +4,6 @@
 
 package slog
 
-import (
-	"reflect"
-)
-
 type Sink interface {
 	// log the msg
 	Log(msg string)
@@ -64,21 +60,15 @@ func (this *BaseSink) SetLocker(lk Locker) {
 }
 
 func (this *BaseSink) Lock() {
-	v := reflect.ValueOf(this.locker)
-	if !v.IsValid() || v.IsNil() {
-		return
+	if this.locker != nil {
+		this.locker.Lock()
 	}
-
-	this.locker.Lock()
 }
 
 func (this *BaseSink) Unlock() {
-	v := reflect.ValueOf(this.locker)
-	if !v.IsValid() || v.IsNil() {
-		return
+	if this.locker != nil {
+		this.locker.Unlock()
 	}
-
-	this.locker.Unlock()
 }
 
 func (this *BaseSink) DefaultInit() {

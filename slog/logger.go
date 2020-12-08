@@ -5,6 +5,7 @@
 package slog
 
 import (
+	"bytes"
 	"container/list"
 	"fmt"
 	"runtime"
@@ -14,6 +15,9 @@ import (
 
 type Logger struct {
 	log_lvl           LogLevel   // the log level
+	print_millseconds bool       // if print milliseconds
+	print_lvl         bool       // if print lvl
+	msg_content_blank bool       // if log content and log head has blank
 	log_name          string     // the logger name
 	formatter_pattern string     // log formatter pattern
 	sink_list         *list.List // sink list
@@ -22,9 +26,12 @@ type Logger struct {
 
 func NewLogger(name string) *Logger {
 	logger := &Logger{
-		log_lvl:   LvlDebug,
-		log_name:  name,
-		sink_list: list.New(),
+		log_lvl:           LvlDebug,
+		print_millseconds: true,
+		print_lvl:         true,
+		msg_content_blank: true,
+		log_name:          name,
+		sink_list:         list.New(),
 	}
 
 	if strings.ToLower(runtime.GOOS) == "windows" {
@@ -34,6 +41,30 @@ func NewLogger(name string) *Logger {
 	}
 
 	return logger
+}
+
+func (this *Logger) SetPrintLvl(p bool) {
+	this.print_lvl = p
+}
+
+func (this *Logger) IsPrintLvl() bool {
+	return this.print_lvl
+}
+
+func (this *Logger) SetPrintMilliseconds(p bool) {
+	this.print_millseconds = p
+}
+
+func (this *Logger) IsPrintMilliseconds() bool {
+	return this.print_millseconds
+}
+
+func (this *Logger) SetMsgContenHasBlank(p bool) {
+	this.msg_content_blank = p
+}
+
+func (this *Logger) IsMsgContentHasBlank() bool {
+	return this.msg_content_blank
 }
 
 func (this *Logger) Name() string {
@@ -66,8 +97,30 @@ func (this *Logger) log_msg(lvl LogLevel, format string, args ...interface{}) {
 
 	// time prefix
 	now := time.Now()
-	msg := fmt.Sprintf("[%04d-%02d-%02d %02d:%02d:%02d.%03d][%-5s] %s%s",
-		now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second(), now.Nanosecond()/1000000, lvl.String(), msg_content, this.line_sperator)
+
+	var buffer bytes.Buffer
+	// time
+	buffer.WriteString(fmt.Sprintf("[%04d-%02d-%02d %02d:%02d:%02d",
+		now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second()))
+
+	if this.IsPrintMilliseconds() {
+		buffer.WriteString(fmt.Sprintf(".%03d]", now.Nanosecond()/1000000))
+	} else {
+		buffer.WriteString("]")
+	}
+
+	if this.IsPrintLvl() {
+		buffer.WriteString(fmt.Sprintf("[%-5s]", lvl.String()))
+	}
+
+	if this.IsMsgContentHasBlank() {
+		buffer.WriteString(" ")
+	}
+
+	buffer.WriteString(msg_content)
+	buffer.WriteString(this.line_sperator)
+
+	msg := buffer.String()
 
 	for e := this.sink_list.Front(); e != nil; e = e.Next() {
 		sink := e.Value.(Sink)
@@ -106,4 +159,20 @@ func (this *Logger) Error(format string, args ...interface{}) {
 func (this *Logger) Fatal(format string, args ...interface{}) {
 	this.log_msg(LvlFatal, format, args...)
 
+}
+
+func (this *Logger) Flush() {
+	for e := this.sink_list.Front(); e != nil; e = e.Next() {
+		sink := e.Value.(Sink)
+		if sink != nil {
+
+			// lock
+			sink.Lock()
+
+			sink.Flush()
+
+			// unlock
+			sink.Unlock()
+		}
+	}
 }
